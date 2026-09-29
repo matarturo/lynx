@@ -63,16 +63,16 @@ Sustituye `<usuario>` por la cuenta u organización donde publiques el repositor
 **Con git:**
 
 ```bash
-git clone https://github.com/<usuario>/lynx.git
+git clone https://github.com/matarturo/lynx.git
 cd lynx
 ```
 
 **Solo el script, con wget o curl:**
 
 ```bash
-wget https://raw.githubusercontent.com/<usuario>/lynx/main/lynx.sh
+wget https://raw.githubusercontent.com/matarturo/lynx/main/lynx.sh
 # o
-curl -fsSLO https://raw.githubusercontent.com/<usuario>/lynx/main/lynx.sh
+curl -fsSLO https://raw.githubusercontent.com/matarturo/lynx/main/lynx.sh
 ```
 
 Como el script se ejecuta con privilegios de root, **revisa su contenido antes de ejecutarlo** (`less lynx.sh`) y no lo canalices directamente a `sudo bash`.
