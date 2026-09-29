@@ -2,7 +2,7 @@
 
 **Auditor pasivo de seguridad y red para Debian y Ubuntu.**
 
-Lynx es un script de Bash que revisa, en modo solo lectura, la configuración de seguridad de un servidor Debian/Ubuntu: parámetros del kernel, firewall (iptables-legacy, iptables-nft, nftables y scripts de **Firewall Builder / fwbuilder**), SSH, cuentas de usuario y permisos críticos. Muestra un reporte en pantalla, calcula un puntaje y guarda evidencias verificables con hash SHA-256 para el auditor.
+Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuración de seguridad de un servidor Debian/Ubuntu: parámetros del kernel, firewall (iptables-legacy, iptables-nft, nftables y scripts de **Firewall Builder / fwbuilder**), SSH, cuentas de usuario y permisos críticos. Muestra un reporte en pantalla, calcula un puntaje y guarda evidencias verificables con hash SHA-256 para el auditor.
 
 > **Alcance:** Lynx es una herramienta de revisión rápida, no una certificación. Evalúa 29 controles puntuables y no reemplaza a un análisis completo de cumplimiento (por ejemplo, CIS Benchmark con OpenSCAP o CIS-CAT). Ver [Limitaciones](#limitaciones).
 
@@ -57,8 +57,6 @@ Lynx lee las reglas desde **los tres backends** (`iptables-legacy-save`, `iptabl
 ---
 
 ## Descarga
-
-Sustituye `<usuario>` por la cuenta u organización donde publiques el repositorio.
 
 **Con git:**
 
@@ -129,14 +127,19 @@ sudo ./lynx.sh                # auditoría completa
 
 ### Ejemplos
 
-```bash
+
 # Auditoría estándar, guardando los resultados en un directorio propio
+
+```bash
 sudo mkdir -p /var/lib/lynx && sudo REPORT_DIR=/var/lib/lynx ./lynx.sh
-
+```
 # Revisión rápida (sin inventarios lentos ni evidencias crudas)
+```bash
 sudo SKIP_SLOW=1 SIN_EVIDENCIAS=1 ./lynx.sh
-
+```
 # Servidor que actúa como router/firewall de red
+
+```bash
 sudo ES_ROUTER=1 ./lynx.sh
 ```
 
