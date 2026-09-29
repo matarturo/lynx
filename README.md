@@ -226,6 +226,13 @@ shellcheck lynx.sh
 
 Mantén el carácter **pasivo** del script: los controles nuevos deben ser de solo lectura.
 
-## Licencia
+# 📜 Licencia
 
-Por definir. Antes de publicar, añade un archivo `LICENSE` con la licencia que prefieras (por ejemplo MIT, Apache-2.0 o GPL-3.0) y actualiza esta sección.
+LYNX se distribuye bajo un modelo propietario **Open-Core**.
+
+El repositorio público proporciona la distribución Community y los recursos necesarios para su instalación y evaluación.
+
+Las ediciones comerciales y componentes asociados están sujetos a sus respectivos términos de licencia comercial.
+
+Consulta [`LICENSE.md`](LICENSE.md) para conocer los términos aplicables.
+
