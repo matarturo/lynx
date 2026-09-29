@@ -231,11 +231,12 @@ Mantén el carácter **pasivo** del script: los controles nuevos deben ser de so
 
 ## 📜 Licencia
 
-LYNX se distribuye bajo la **MIT License**.
+LYNX se distribuye bajo la **Apache License 2.0**.
 
-Esto significa que puedes usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del software, siempre que incluyas el aviso de copyright original y el texto de la licencia en todas las copias o partes sustanciales del software.
+Esto significa que puedes usar, copiar, modificar, distribuir y vender el software libremente, siempre que incluyas una copia de la licencia, conserves los avisos de copyright y atribución, e incluyas una copia del archivo `NOTICE` si el proyecto lo contiene.
 
-El software se proporciona **"tal cual"**, sin garantía de ningún tipo, expresa o implícita.
+Además, la Apache License 2.0 incluye una **concesión explícita de patentes**, lo que te protege frente a posibles reclamaciones por parte de contribuidores.
 
-Consulta [`LICENSE.md`](LICENSE.md) para conocer los términos completos.
+El software se proporciona **"tal cual"**, sin garantía de ningún tipo.
 
+Consulta [`LICENSE`](LICENSE) y [`NOTICE`](NOTICE) para conocer los términos completos.
