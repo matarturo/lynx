@@ -229,13 +229,13 @@ shellcheck lynx.sh
 
 Mantén el carácter **pasivo** del script: los controles nuevos deben ser de solo lectura.
 
-# 📜 Licencia
+## 📜 Licencia
 
-LYNX se distribuye bajo un modelo propietario **Open-Core**.
+LYNX se distribuye bajo la **MIT License**.
 
-El repositorio público proporciona la distribución Community y los recursos necesarios para su instalación y evaluación.
+Esto significa que puedes usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del software, siempre que incluyas el aviso de copyright original y el texto de la licencia en todas las copias o partes sustanciales del software.
 
-Las ediciones comerciales y componentes asociados están sujetos a sus respectivos términos de licencia comercial.
+El software se proporciona **"tal cual"**, sin garantía de ningún tipo, expresa o implícita.
 
-Consulta [`LICENSE.md`](LICENSE.md) para conocer los términos aplicables.
+Consulta [`LICENSE.md`](LICENSE.md) para conocer los términos completos.
 
