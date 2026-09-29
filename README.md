@@ -42,7 +42,7 @@ Lynx es un script de Bash que revisa, en modo solo lectura, la configuración de
 | 5 | Usuarios y privilegios | 10 | Un solo UID 0, sin contraseñas vacías, cuentas de sistema sin shell interactiva |
 | 6 | Permisos críticos | 10 | `/etc/shadow`, `/etc/passwd`, directorios world-writable sin sticky bit |
 
-### Sección 7: información y evidencias (no puntúa)
+### Sección 7: información y evidencias
 
 Datos de apoyo para el auditor: puertos en escucha y procesos, cuentas con login, `sudoers` con `NOPASSWD`, miembros del grupo `docker`, contraseñas que nunca expiran, estado de servicios (auditd, rsyslog, fail2ban, unattended-upgrades…), sincronización de hora, AppArmor/SELinux, actualizaciones pendientes (simulación con `apt-get -s`), opciones de montaje de `/tmp`, `/var/tmp`, `/dev/shm` y `/home`, paquetes de servicios inseguros (telnet, rsh, nis, tftp, xinetd) e inventarios de archivos SUID/SGID, world-writable y sin propietario.
 
