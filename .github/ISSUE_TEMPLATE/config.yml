@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar una vulnerabilidad (privado)
+    url: https://github.com/matarturo/lynx/security/advisories/new
+    about: No uses issues públicos para vulnerabilidades. Lee SECURITY.md.
+  - name: Preguntas y dudas de uso
+    url: https://github.com/matarturo/lynx/discussions
+    about: Si es una pregunta general y no un bug, abre una discusión.
