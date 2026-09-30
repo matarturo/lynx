@@ -6,20 +6,11 @@
 [![Platform](https://img.shields.io/badge/platform-Debian%20%7C%20Ubuntu-informational.svg)]()
 [![Bash](https://img.shields.io/badge/bash-4.4%2B-89e051.svg)]()
 
-
 **Auditor pasivo de seguridad y red para Debian y Ubuntu.**
 
 Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuración de seguridad de un servidor Debian/Ubuntu: parámetros del kernel, firewall (iptables-legacy, iptables-nft, nftables y scripts de **Firewall Builder / fwbuilder**), SSH, cuentas de usuario y permisos críticos. Muestra un reporte en pantalla, calcula un puntaje y guarda evidencias verificables con hash SHA-256 para el auditor.
 
 > **Alcance:** Lynx es una herramienta de revisión rápida, no una certificación. Evalúa 29 controles puntuables y no reemplaza a un análisis completo de cumplimiento (por ejemplo, CIS Benchmark con OpenSCAP o CIS-CAT). Ver [Limitaciones](#limitaciones).
-
----
-
-## ¿Por qué Lynx?
-
-- **Pasivo por diseño:** no modifica configuración, no instala paquetes, no reinicia servicios. Ejecutable en producción sin miedo.
-- **Evidencias verificables:** cada auditoría genera un reporte con SHA-256 y volcados crudos, listo para adjuntar a un informe.
-- **Cubre el rincón que otros ignoran:** detecta reglas huérfanas entre `iptables-legacy`, `iptables-nft` y `nftables`, incluyendo las que genera **fwbuilder** — el caso típico tras una migración mal hecha.
 
 ---
 
@@ -43,6 +34,14 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 
 ---
 
+## ¿Por qué Lynx?
+
+- **Pasivo por diseño:** no modifica configuración, no instala paquetes, no reinicia servicios. Ejecutable en producción sin miedo.
+- **Evidencias verificables:** cada auditoría genera un reporte con SHA-256 y volcados crudos, listo para adjuntar a un informe.
+- **Cubre el rincón que otros ignoran:** detecta reglas huérfanas entre `iptables-legacy`, `iptables-nft` y `nftables`, incluyendo las que genera **fwbuilder** — el caso típico tras una migración mal hecha.
+
+---
+
 ## Datos básicos
 
 | | |
@@ -61,13 +60,6 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 - Verificado con `bash -n` y `shellcheck` sin advertencias.
 - Ejecutado de extremo a extremo en Ubuntu 24.04 (entorno de pruebas sin systemd, iptables, nft ni sshd). Los análisis de firewall se probaron con volcados simulados de fwbuilder, iptables-legacy, iptables-nft y nftables nativo.
 - **Pendiente:** validación en servidores Debian 13 reales. Ejecútalo primero en un equipo de prueba.
-
----
-
-## Ejemplo de salida
-
-
-
 
 ---
 
