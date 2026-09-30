@@ -1,10 +1,46 @@
 # Lynx
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![ShellCheck](https://github.com/matarturo/lynx/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/matarturo/lynx/actions/workflows/shellcheck.yml)
+[![Version](https://img.shields.io/badge/version-3.0-green.svg)](CHANGELOG.md)
+[![Platform](https://img.shields.io/badge/platform-Debian%20%7C%20Ubuntu-informational.svg)]()
+[![Bash](https://img.shields.io/badge/bash-4.4%2B-89e051.svg)]()
+
+# Lynx
+
 **Auditor pasivo de seguridad y red para Debian y Ubuntu.**
 
 Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuración de seguridad de un servidor Debian/Ubuntu: parámetros del kernel, firewall (iptables-legacy, iptables-nft, nftables y scripts de **Firewall Builder / fwbuilder**), SSH, cuentas de usuario y permisos críticos. Muestra un reporte en pantalla, calcula un puntaje y guarda evidencias verificables con hash SHA-256 para el auditor.
 
 > **Alcance:** Lynx es una herramienta de revisión rápida, no una certificación. Evalúa 29 controles puntuables y no reemplaza a un análisis completo de cumplimiento (por ejemplo, CIS Benchmark con OpenSCAP o CIS-CAT). Ver [Limitaciones](#limitaciones).
+
+---
+
+## ¿Por qué Lynx?
+
+- **Pasivo por diseño:** no modifica configuración, no instala paquetes, no reinicia servicios. Ejecutable en producción sin miedo.
+- **Evidencias verificables:** cada auditoría genera un reporte con SHA-256 y volcados crudos, listo para adjuntar a un informe.
+- **Cubre el rincón que otros ignoran:** detecta reglas huérfanas entre `iptables-legacy`, `iptables-nft` y `nftables`, incluyendo las que genera **fwbuilder** — el caso típico tras una migración mal hecha.
+
+---
+
+<details>
+<summary>Índice</summary>
+
+- [¿Por qué Lynx?](#por-qué-lynx)
+- [Datos básicos](#datos-básicos)
+- [Qué revisa](#qué-revisa)
+- [Descarga](#descarga)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Salida y cómo interpretarla](#salida-y-cómo-interpretarla)
+- [Público objetivo](#quién-puede-usarlo-público-objetivo)
+- [Limitaciones](#limitaciones)
+- [Seguridad de los datos generados](#seguridad-de-los-datos-generados)
+- [Contribuir](#contribuir)
+- [Licencia](#-licencia)
+
+</details>
 
 ---
 
@@ -26,6 +62,13 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 - Verificado con `bash -n` y `shellcheck` sin advertencias.
 - Ejecutado de extremo a extremo en Ubuntu 24.04 (entorno de pruebas sin systemd, iptables, nft ni sshd). Los análisis de firewall se probaron con volcados simulados de fwbuilder, iptables-legacy, iptables-nft y nftables nativo.
 - **Pendiente:** validación en servidores Debian 13 reales. Ejecútalo primero en un equipo de prueba.
+
+---
+
+## Ejemplo de salida
+
+
+
 
 ---
 
@@ -193,6 +236,36 @@ cd lynx_evidencias_<fecha> && sha256sum -c SHA256SUMS
 
 ---
 
+
+### 🔵 Comparación honesta con otras herramientas
+
+Esto **te posiciona mejor**, no peor. Alguien de r/netsec te lo va a preguntar:
+
+```markdown
+## Lynx frente a otras herramientas
+
+| Herramienta | Enfoque | Cuándo usarla |
+|---|---|---|
+| **Lynx** | 29 controles, evidencias con hash, firewalls legacy + fwbuilder | Revisión rápida, pre-auditoría, migraciones de firewall |
+| Lynis | Auditoría general más amplia, sin foco en firewalls legacy | Primera pasada de hardening |
+| OpenSCAP / CIS-CAT | Cumplimiento formal CIS/STIG | Certificación, reporting regulatorio |
+| auditd + osquery | Monitorización continua | Producción, forense |
+
+Lynx **complementa** estas herramientas; no las sustituye.
+
+---
+
+## Códigos de salida
+
+| Código | Significado |
+|---|---|
+| `0` | Auditoría completada, puntaje ≥ 85 % |
+| `1` | Auditoría completada, puntaje entre 60 % y 84 % |
+| `2` | Auditoría completada, puntaje < 60 % |
+| `3` | Error de ejecución (permisos, dependencias, etc.) |
+
+---
+
 ## Limitaciones
 
 - **Cobertura acotada:** 29 controles puntuables. No evalúan filesystems y particionado, políticas de contraseñas y PAM, la mayoría de los parámetros de `sshd`, auditd, logging ni integridad de archivos. Parches, AppArmor, auditd y sudoers se listan como información, pero no puntúan.
@@ -218,6 +291,16 @@ Ejecuta Lynx únicamente en sistemas propios o con autorización expresa del pro
 
 ---
 
+## Roadmap
+
+- [ ] Validación en Debian 13 real
+- [ ] Códigos de salida para CI
+- [ ] Salida en JSON (`--format=json`)
+- [ ] Cobertura de `auditd` y PAM
+- [ ] Envío opcional del reporte por correo electrónico 
+
+---
+
 ## Contribuir
 
 Las contribuciones son bienvenidas: abre un *issue* para reportar errores o proponer controles y un *pull request* para cambios de código. Antes de enviarlo:
@@ -228,6 +311,8 @@ shellcheck lynx.sh
 ```
 
 Mantén el carácter **pasivo** del script: los controles nuevos deben ser de solo lectura.
+
+---
 
 ## 📜 Licencia
 
