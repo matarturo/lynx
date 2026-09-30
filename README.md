@@ -6,7 +6,6 @@
 [![Platform](https://img.shields.io/badge/platform-Debian%20%7C%20Ubuntu-informational.svg)]()
 [![Bash](https://img.shields.io/badge/bash-4.4%2B-89e051.svg)]()
 
-# Lynx
 
 **Auditor pasivo de seguridad y red para Debian y Ubuntu.**
 
@@ -168,8 +167,170 @@ sudo ./lynx.sh                # auditoría completa
 | `SKIP_SLOW=1` | Omite los inventarios con `find` (SUID, world-writable, huérfanos) |
 | `TIMEOUT_FIND=60` | Segundos máximos por inventario con `find` (por defecto 60) |
 
+---
+
 ### Ejemplos
 
+## Ejemplo de salida
+
+A continuación, un fragmento de una auditoría real (datos anonimizados) sobre un servidor Debian 12 que ya había sido endurecido previamente. Los códigos ANSI de color del terminal se eliminan al escribir el archivo `.txt`, así que el reporte se ve tal cual:
+
+```
+====================================================================
+  LYNX v3.0 - AUDITORÍA PASIVA DE SEGURIDAD, RED Y PRIVILEGIOS
+  Fecha: mié 30 sep 2026 14:32:07 UTC | Host: srv-web-01
+====================================================================
+
+---> 1. AUDITANDO PARÁMETROS KERNEL (SYSCTL)
+[PASS] +4 pts | Protección contra SYN Flood (tcp_syncookies=1)
+[PASS] +3 pts | Bloqueo de redirecciones ICMP IPv4 (all y default = 0)
+[PASS] +3 pts | Enrutamiento de origen deshabilitado (accept_source_route=0)
+[PASS] +3 pts | RPFilter activado (anti IP spoofing, rp_filter>=1)
+[PASS] +3 pts | Ocultamiento de punteros de kernel (kptr_restrict>=1)
+[FAIL]   0 pts | Restricción de acceso a dmesg (dmesg_restrict>=1)
+[FAIL]   0 pts | Restricción de PTRACE a no privilegiados (yama.ptrace_scope>=1)
+[PASS] +2 pts | Bloqueo de redirecciones ICMP IPv6 (accept_redirects=0)
+[PASS] +2 pts | No enviar redirecciones ICMP (send_redirects=0)
+[PASS] +2 pts | ASLR completo (randomize_va_space=2)
+[PASS] +2 pts | Sin core dumps de binarios SUID (fs.suid_dumpable=0)
+
+---> 2. AUDITANDO STACK DE RED (CONNTRACK / FORWARDING / BRIDGE)
+[PASS] +4 pts | Módulo conntrack (stateful) cargado en el kernel
+[PASS] +3 pts | IP Forwarding desactivado (host puro; use ES_ROUTER=1 si enruta)
+[N/A ] +3 pts | Si hay bridges: bridge-nf-call-iptables=1 (no aplica)
+
+  [i] Bridging / Bonding (informativo, no puntua):
+      - Bridges : ninguno
+      - Bonds   : ninguno
+
+---> 3. AUDITANDO FIREWALL (IPTABLES LEGACY, IPTABLES-NFT, NFTABLES)
+[PASS] +5 pts | Reglas de firewall cargadas en el kernel (cualquier backend)
+[PASS] +7 pts | Regla stateful ESTABLISHED,RELATED (conntrack, state o nft ct state)
+[PASS] +7 pts | INPUT con política DROP/REJECT o regla final de denegación
+[PASS] +3 pts | FORWARD con política DROP/REJECT (o forwarding desactivado)
+[PASS] +3 pts | IPv6 filtrado por firewall (o IPv6 deshabilitado)
+
+  [i] Backends de firewall detectados:
+      - Binario iptables       : /usr/sbin/xtables-nft-multi
+      - Reglas iptables-legacy : 0 (IPv4) / 0 (IPv6)
+      - Reglas iptables-nft    : 12 (IPv4) / 6 (IPv6)
+      - nftables (ruleset)     : con reglas
+  [i] fwbuilder:
+      - Paquete instalado      : no
+      - Scripts .fw generados  : ninguno encontrado
+      - Arranque persistente   : servicio systemd: nftables (enabled)
+
+  [i] Persistencia del firewall (¿se cargan las reglas al reiniciar?):
+      - servicio systemd: nftables (enabled)
+
+---> 4. AUDITANDO SSH Y HARDENING GENERAL
+[PASS] +4 pts | SSH: root sin contraseña (PermitRootLogin no / prohibit-password)
+[PASS] +4 pts | SSH: autenticación por contraseña deshabilitada
+[FAIL]   0 pts | Módulos de red obsoletos bloqueados con 'install' (dccp, rds, tipc)
+[FAIL]   0 pts | Core dumps limitados (limits.conf hard core 0 o coredump Storage=none)
+
+---> 5. AUDITANDO USUARIOS, CUENTAS Y PRIVILEGIOS
+[PASS] +3 pts | Sin cuentas adicionales con UID 0 (solo root)
+[PASS] +3 pts | Sin contraseñas vacías en /etc/shadow
+[PASS] +4 pts | Cuentas de sistema (UID<1000) con shell no interactiva
+
+  [i] Resumen informativo de usuarios:
+      - Miembros del grupo sudo: deploy
+
+---> 6. AUDITANDO PERMISOS DE ARCHIVOS Y DIRECTORIOS CRÍTICOS
+[PASS] +3 pts | /etc/shadow: propietario root y modo 640 o más estricto
+[PASS] +3 pts | /etc/passwd: propietario root y modo 644 o más estricto
+[FAIL]   0 pts | Sin directorios world-writable sin sticky bit en /etc, /var, /usr
+      Directorios encontrados (máx. 5):
+        - /var/www/uploads
+
+---> 7. EVIDENCIAS E INFORMACIÓN COMPLEMENTARIA (no puntúa)
+
+  [i] Sistema:
+      - SO     : Debian GNU/Linux 12 (bookworm)
+      - Kernel : 6.1.0-25-amd64 | up 47 days, 3 hours
+
+  [i] Puertos en escucha: 4 en total, 1 expuesto en todas las interfaces:
+      - tcp LISTEN 0.0.0.0:22     users:(("sshd",pid=812,fd=3))
+      - tcp LISTEN 127.0.0.1:5432 users:(("postgres",pid=1043,fd=7))
+      - tcp LISTEN 127.0.0.1:8080 users:(("node",pid=2211,fd=18))
+      - tcp LISTEN [::1]:5432     users:(("postgres",pid=1043,fd=6))
+
+  [i] Usuarios y privilegios:
+      - Cuentas con shell de login: root deploy
+      - Cuentas con contraseña que nunca expira (maxdias=99999): 2
+
+  [i] Servicios de seguridad y soporte (activo / habilitado):
+      - ssh: active / enabled
+      - auditd: inactive / disabled
+      - rsyslog: active / enabled
+      - fail2ban: active / enabled
+      - unattended-upgrades: active / enabled
+      - nftables: active / enabled
+      - Journald persistente : sí
+      - Hora sincronizada    : sí
+
+  [i] Control de acceso obligatorio:
+      - AppArmor: activo
+
+  [i] Parches:
+      - Paquetes con actualización pendiente: 7 (de seguridad: 2) según caché apt de hace 1 día(s)
+      - ALERTA: hay actualizaciones de seguridad pendientes.
+      - unattended-upgrades: instalado
+
+  [i] Opciones de montaje (nodev, nosuid, noexec):
+      - /tmp: montaje propio | opciones que faltan: ninguna
+      - /var/tmp: montaje propio | opciones que faltan: ninguna
+      - /dev/shm: montaje propio | opciones que faltan: ninguna
+      - /home: hereda de / | opciones que faltan: nodev nosuid
+
+  [i] Paquetes de servicios inseguros instalados (telnet, rsh, nis, tftp, xinetd...): ninguno
+
+  [i] Inventarios de archivos (sistemas de archivos locales, límite 60s c/u):
+      - Binarios SUID/SGID          : 18
+      - Archivos world-writable     : 2
+      - Archivos sin propietario    : 0
+
+  [i] Evidencias crudas en: ./lynx_evidencias_20260930_143207
+      Contienen datos sensibles (sudoers, procesos, reglas de firewall): proteja o cifre el directorio.
+
+====================================================================
+ PUNTUACIÓN DE AUDITORÍA: 83 / 100 (83%)  -  29 controles evaluados
+====================================================================
+ Controles fallidos:
+   - Restricción de acceso a dmesg (dmesg_restrict>=1)
+   - Restricción de PTRACE a no privilegiados (yama.ptrace_scope>=1)
+   - Módulos de red obsoletos bloqueados con 'install' (dccp, rds, tipc)
+   - Core dumps limitados (limits.conf hard core 0 o coredump Storage=none)
+   - Sin directorios world-writable sin sticky bit en /etc, /var, /usr
+
+ CUMPLIMIENTO: MEDIO - hay omisiones a corregir
+ Nota: el puntaje cubre solo 29 controles pasivos. Parches, AppArmor, auditd, sudoers y
+       servicios expuestos se listan en la sección 7 como información (no puntúan). No equivale
+       a una certificación de hardening.
+====================================================================
+ Reporte guardado en: ./lynx_reporte_20260930_143207.txt
+
+Manifiesto de evidencias: ./lynx_evidencias_20260930_143207/SHA256SUMS
+SHA-256 del reporte: 7c1a3e9f8b04d2e5a6f18c93b7e2d40a9f5c8b1e6d3a7f2c4e9b6a8d1f3c5e70  (archivo: ./lynx_reporte_20260930_143207.txt.sha256)
+```
+
+### Cómo interpretar este ejemplo
+
+- **Sección 1 (24/30):** casi todo bien. Los dos fallos (`dmesg_restrict`, `ptrace_scope`) son hallazgos habituales en Debian 12 recién instalado: se activan añadiendo dos líneas a `/etc/sysctl.d/`.
+- **Sección 2 (10/10):** el control de bridges se marca **N/A** porque el host no tiene bridges; **suma puntos** al no aplicar.
+- **Sección 3 (25/25):** firewall unificado en `nftables`, con persistencia por systemd. Este es el escenario al que se llega tras migrar bien desde `iptables-legacy`.
+- **Sección 4 (8/15):** `PermitRootLogin` y `PasswordAuthentication` correctos, pero faltan bloqueos de módulos y límite de core dumps.
+- **Sección 5 (10/10):** cuentas de sistema sin shell interactiva y sin UID 0 duplicados.
+- **Sección 6 (6/10):** `/var/www/uploads` sin sticky bit. Un solo directorio, pero baja el puntaje a MEDIO.
+- **Sección 7:** toda la información complementaria (puertos, servicios, parches, montajes, inventarios) se **guarda como evidencia** con su SHA-256, pero **no puntúa**.
+
+El ejemplo ilustra dos cosas importantes de Lynx:
+
+1. **83 % no es "bueno", es MEDIO.** La herramienta no regala puntaje: exige cumplir el control completo.
+2. **Los N/A suman**, no restan. Lynx premia los controles que no aplican al perfil del servidor, en lugar de penalizar a quien no los necesita.
+
+---
 
 # Auditoría estándar, guardando los resultados en un directorio propio
 
