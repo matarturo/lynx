@@ -161,8 +161,6 @@ sudo ./lynx.sh                # auditoría completa
 
 ---
 
-### Ejemplos
-
 ## Ejemplo de salida
 
 A continuación, un fragmento de una auditoría real (datos anonimizados) sobre un servidor Debian 12 que ya había sido endurecido previamente. Los códigos ANSI de color del terminal se eliminan al escribir el archivo `.txt`, así que el reporte se ve tal cual:
