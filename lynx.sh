@@ -157,7 +157,23 @@ chk_ip_forward() {
     [[ "${ES_ROUTER:-0}" == "1" ]] && return 77
     sv_eq net.ipv4.ip_forward 0
 }
-
+# rp_filter efectivo: el kernel usa max(all, interfaz). Pasa si toda interfaz
+# (excepto lo, all y default) tiene un valor efectivo >= 1.
+chk_rp_filter() {
+    local base=/proc/sys/net/ipv4/conf f ifc v all eff n=0 ok=1
+    [[ -r "$base/all/rp_filter" ]] || return 1
+    all=$(cat "$base/all/rp_filter")
+    for f in "$base"/*/rp_filter; do
+        ifc=${f#"$base"/}; ifc=${ifc%/rp_filter}
+        [[ "$ifc" == all || "$ifc" == default || "$ifc" == lo ]] && continue
+        v=$(cat "$f" 2>/dev/null); v=${v:-0}
+        n=$((n + 1))
+        eff=$(( v > all ? v : all ))
+        (( eff >= 1 )) || ok=0
+    done
+    (( n == 0 )) && { (( all >= 1 )); return; }
+    (( ok == 1 ))
+}
 # ------------------------------------------------------------------------------
 # Recoleccion de reglas de firewall (solo lectura), por backend:
 #   iptables-legacy  -> iptables-legacy-save   (solo si hay tablas cargadas)
@@ -240,10 +256,66 @@ chain_terminal_deny() {
     fi
     return 1
 }
-
+# Cadenas alcanzables desde una cadena inicial (sigue -j / -g a cadenas de usuario)
+ipt_reach() {   # $1 = volcado iptables-save (tabla filter), $2 = cadena inicial
+    awk -v start="$2" '
+        $1=="-A" { for (i=3;i<=NF;i++) if ($i=="-j" || $i=="-g") { n++; from[n]=$2; to[n]=$(i+1) } }
+        END {
+            seen[start]=1
+            do { changed=0
+                 for (k=1;k<=n;k++) if ((from[k] in seen) && !(to[k] in seen)) { seen[to[k]]=1; changed=1 }
+            } while (changed)
+            for (c in seen) print c
+        }' <<<"$1"
+}
+# Hay alguna regla en INPUT o en cadenas alcanzables desde INPUT
+ipt_input_has_rules() {   # $1 = volcado (tabla filter)
+    local chains; chains=$(ipt_reach "$1" INPUT | tr '\n' ' ')
+    awk -v chains="$chains" '
+        BEGIN { n=split(chains, a, " "); for (i=1;i<=n;i++) ok[a[i]]=1 }
+        $1=="-A" && ($2 in ok) { f=1 }
+        END { exit !f }' <<<"$1"
+}
+# Regla ESTABLISHED+RELATED que acepta, SOLO en INPUT o cadenas alcanzables desde INPUT
+ipt_stateful_in() {   # $1 = volcado (tabla filter), $2 = cadena (INPUT)
+    local chains; chains=$(ipt_reach "$1" "$2" | tr '\n' ' ')
+    awk -v chains="$chains" '
+        BEGIN { n=split(chains, a, " "); for (i=1;i<=n;i++) ok[a[i]]=1 }
+        $1=="-A" && ($2 in ok) && /-j ACCEPT/ {
+            if (match($0, /(--ctstate|--state) [A-Z,]+/)) {
+                t = substr($0, RSTART, RLENGTH)
+                if (t ~ /ESTABLISHED/ && t ~ /RELATED/) f = 1
+            }
+        }
+        END { exit !f }' <<<"$1"
+}
+# Equivalente para nftables: parte de las cadenas con "hook input" y sigue jump/goto.
+# $1 = familias (regex, ej. 'ip|inet' o 'ip6|inet'), $2 = rules | stateful
+nft_input_scan() {
+    awk -v fam="^($1)$" -v mode="$2" '
+        $1=="table" { tbl=$2"/"$3; okt=($2 ~ fam); ch=""; next }
+        $NF=="{"    { if ($1=="chain") ch=tbl"/"$2; else ch=""; next }
+        $1=="}"     { ch=""; next }
+        ch=="" || !okt { next }
+        /hook input/ { start[ch]=1 }
+        $1=="type" || $1=="policy" { next }
+        {
+            hit[ch]=1
+            for (i=1;i<=NF;i++) if ($i=="jump" || $i=="goto") { n++; from[n]=ch; to[n]=tbl"/"$(i+1) }
+            if ($0 ~ /ct state/ && $0 ~ /established/ && $0 ~ /related/ && $0 ~ /accept/) st[ch]=1
+        }
+        END {
+            for (c in start) seen[c]=1
+            do { changed=0
+                 for (k=1;k<=n;k++) if ((from[k] in seen) && !(to[k] in seen)) { seen[to[k]]=1; changed=1 }
+            } while (changed)
+            for (c in seen) if ((mode=="rules" && (c in hit)) || (mode=="stateful" && (c in st))) f=1
+            exit !f
+        }' <<<"$NFT_RS"
+}
 # --- Checks de firewall -------------------------------------------------------
-chk_fw_rules_loaded() { grep -q '^-A ' <<<"$ALL4" || nft_has_rules; }
-chk_fw_stateful()     { ipt_stateful "$FILT4" || nft_stateful "$NFT_RS"; }
+chk_fw_rules_loaded() { ipt_input_has_rules "$FILT4" || nft_input_scan 'ip|inet' rules; }
+chk_fw_stateful()     { ipt_stateful_in "$FILT4" INPUT || nft_input_scan 'ip|inet' stateful; }
 chk_fw_input_deny() {
     grep -Eq '^:INPUT (DROP|REJECT)' <<<"$FILT4" && return 0
     chain_terminal_deny "$FILT4" INPUT && return 0
@@ -257,8 +329,10 @@ chk_fw_forward_deny() {
 }
 chk_fw_ipv6() {
     ipv6_enabled || return 77
-    grep -Eq '^(-A |:INPUT (DROP|REJECT))' <<<"$ALL6" && return 0
-    nft_v6_rules
+    local f6; f6=$(ipt_table "$ALL6" filter)
+    grep -Eq '^:INPUT (DROP|REJECT)' <<<"$f6" && return 0
+    ipt_input_has_rules "$f6" && return 0
+    nft_input_scan 'ip6|inet' rules
 }
 
 # --- Checks de stack de red ---------------------------------------------------
@@ -742,8 +816,8 @@ check_item "Bloqueo de redirecciones ICMP IPv4 (all y default = 0)" 3 \
     chk_accept_redirects
 check_item "Enrutamiento de origen deshabilitado (accept_source_route=0)" 3 \
     sv_eq net.ipv4.conf.all.accept_source_route 0
-check_item "RPFilter activado (anti IP spoofing, rp_filter>=1)" 3 \
-    sv_ge net.ipv4.conf.all.rp_filter 1
+check_item "RPFilter efectivo en todas las interfaces (max(all, interfaz) >= 1)" 3 \
+    chk_rp_filter
 check_item "Ocultamiento de punteros de kernel (kptr_restrict>=1)" 3 \
     sv_ge kernel.kptr_restrict 1
 check_item "Restricción de acceso a dmesg (dmesg_restrict>=1)" 3 \
