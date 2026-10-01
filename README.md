@@ -43,9 +43,8 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 ---
 
 ## Datos básicos
-
-| | |
-|---|---|
+```text
+|------------|------|
 | **Nombre** | Lynx |
 | **Versión** | 3.0 |
 | **Lenguaje** | Bash (5.x recomendado; mínimo 4.4) |
@@ -54,6 +53,62 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 | **Naturaleza** | Pasivo: no modifica configuración, no instala ni elimina paquetes |
 | **Salida** | Reporte `.txt` sin colores, directorio de evidencias y hashes SHA-256 |
 | **Licencia** | *Por definir* (añade un archivo `LICENSE` antes de publicar) |
+```
+## Sistemas validados
+
+Lynx se ha probado en los siguientes sistemas. Solo se marca como
+**validado** aquel en el que se ha ejecutado una auditoría completa de
+extremo a extremo con resultados verificables.
+
+### ✅ Validado en sistema real
+
+| Sistema | Versión | Kernel probado | Notas |
+|------------------------|----|---------------------|---------------------------------------------------------------------------------------------------------------------|
+| **Debian 13 (trixie)** | 13 | 6.12.96+deb13-amd64 | Ejecución completa con `systemd`, `ufw`, `nftables` y Docker activos. Los 29 controles se ejecutaron correctamente. |
+
+### 🟡 Compatible (probado parcialmente)
+
+| Sistema | Versión | Estado |
+|---|---|---|
+| **Ubuntu 24.04 LTS (Noble)** | 24.04 | Ejecutado en entorno de pruebas sin `systemd`, `iptables`, `nft` ni `sshd`. Los análisis de firewall se validaron con volcados simulados de `fwbuilder`, `iptables-legacy`, `iptables-nft` y `nftables` nativo. |
+| **Debian 12 (bookworm)** | 12 | Probado con los mismos volcados simulados que Ubuntu 24.04. Los defaults del kernel y las rutas de configuración son muy similares a Debian 13. |
+
+### ⚪ Teóricamente compatible (no probado)
+
+- Ubuntu 22.04 LTS (Jammy) y 24.04 LTS (Noble).
+- Debian 11 (bullseye) y 12 (bookworm).
+- Derivados de Debian/Ubuntu con `systemd` y `apt`: Linux Mint, Pop!_OS, Proxmox VE, Kali Linux, Parrot OS.
+
+En estos sistemas Lynx debería funcionar sin cambios, pero **no se ha
+verificado la ejecución completa**. Si lo pruebas, abre un issue con el
+resultado y añadimos el sistema a la lista de validados.
+
+### ❌ No soportado
+
+Lynx está diseñado específicamente para Debian y sus derivados. **No
+está pensado para**:
+
+- RHEL, Fedora, CentOS, Rocky Linux, AlmaLinux, openSUSE, Arch Linux.
+- Sistemas sin `systemd` (Devuan, Alpine, Void, contenedores minimalistas).
+- Sistemas sin `apt`.
+
+No es que "no funcione", es que **muchos controles dependen de rutas,
+paquetes y convenciones específicas de Debian/Ubuntu** (`/etc/apt/`,
+`/etc/modprobe.d/`, `apt-get`, `dpkg-query`, UIDs de sistema <1000,
+grupo `adm`, etc.). En otras distribuciones los resultados pueden ser
+incorrectos o directamente falsos.
+
+### Reportar compatibilidad
+
+Si has ejecutado Lynx en un sistema que no aparece como validado,
+cuéntanoslo abriendo un issue con:
+
+- Distribución y versión (`cat /etc/os-release`).
+- Versión del kernel (`uname -r`).
+- Puntuación obtenida y controles que dieron resultados inesperados.
+- Cualquier mensaje de error o comportamiento raro.
+
+Con esa información actualizamos la tabla.
 
 ### Estado de las pruebas
 
@@ -68,7 +123,7 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 ### Secciones que puntúan (100 puntos, 29 controles)
 
 | # | Sección | Peso | Ejemplos de controles |
-|---|---|---|---|
+|---|---------|------|-----------------------|
 | 1 | Parámetros del kernel (sysctl) | 30 | SYN cookies, redirecciones ICMP (IPv4/IPv6), source routing, rp_filter, kptr_restrict, dmesg_restrict, ptrace_scope, ASLR, suid_dumpable |
 | 2 | Stack de red | 10 | conntrack cargado, IP forwarding, bridge-nf-call-iptables (si hay bridges) |
 | 3 | Firewall | 25 | Reglas cargadas, regla *stateful* ESTABLISHED,RELATED, INPUT/FORWARD con política DROP, filtrado IPv6 |
