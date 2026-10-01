@@ -103,8 +103,8 @@ init_report_dir() {
         exit 1
     fi
 
-    # root:adm 750 es el estándar para /var/lib con datos sensibles:
-    # root escribe, el grupo adm puede leer sin necesitar sudo.
+   # root:adm 750: el grupo adm puede listar el directorio, pero los archivos
+   # (600) y las evidencias (700) quedan legibles solo por root (umask 077).
     chown root:adm "$REPORT_DIR" 2>/dev/null || chown root:root "$REPORT_DIR" 2>/dev/null
     chmod 750 "$REPORT_DIR"
 
