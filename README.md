@@ -43,17 +43,18 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 ---
 
 ## Datos básicos
-```text
-|------------|------|
+| | |
+|---|---|
 | **Nombre** | Lynx |
 | **Versión** | 3.0 |
 | **Lenguaje** | Bash (5.x recomendado; mínimo 4.4) |
 | **Sistemas objetivo** | Debian 12 / 13 y derivados, Ubuntu (LTS recientes) |
+| **Sistemas validados** | Debian 13 (trixie) — ver [Sistemas validados](#sistemas-validados) |
 | **Privilegios** | Requiere `root` (lee `/etc/shadow`, reglas de firewall y configuración de kernel) |
 | **Naturaleza** | Pasivo: no modifica configuración, no instala ni elimina paquetes |
-| **Salida** | Reporte `.txt` sin colores, directorio de evidencias y hashes SHA-256 |
-| **Licencia** | *Por definir* (añade un archivo `LICENSE` antes de publicar) |
-```
+| **Salida** | Reporte `.txt` sin colores, evidencias crudas y hashes SHA-256, en `/var/lib/lynx/<host>/` |
+| **Licencia** | [Apache License 2.0](LICENSE) |
+
 ## Sistemas validados
 
 Lynx se ha probado en los siguientes sistemas. Solo se marca como
