@@ -43,7 +43,7 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 ---
 
 ## Datos básicos
-| | |
+
 |---|---|
 | **Nombre** | Lynx |
 | **Versión** | 3.0 |
