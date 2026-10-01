@@ -9,7 +9,8 @@
 # Genera un reporte en pantalla y guarda evidencias en un .txt (sin colores).
 #
 # Uso:   sudo ./lynx.sh        (ayuda: ./lynx.sh --help)
-# Vars:  REPORT_DIR=/ruta   directorio del reporte (por defecto: el actual)
+# Vars:  REPORT_DIR=/ruta   directorio base (por defecto: /var/lib/lynx/<host>)
+#        LYNX_FLAT=1        no añade subdirectorio por host
 #        ES_ROUTER=1        el host enruta a proposito: ip_forward=1 se marca N/A
 #        SIN_EVIDENCIAS=1   no guarda volcados crudos (solo el reporte)
 #        SKIP_SLOW=1        omite inventarios con find (SUID, world-writable, huerfanos)
@@ -37,8 +38,27 @@ export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 umask 077
 
 LYNX_VERSION="3.0"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-REPORT_FILE="${REPORT_DIR:-.}/lynx_reporte_${TIMESTAMP}.txt"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")_$$
+
+# Directorio de trabajo por defecto: histórico persistente bajo FHS.
+# Se puede sobrescribir con REPORT_DIR=/otra/ruta (útil para CI o pruebas).
+REPORT_DIR_DEFAULT="/var/lib/lynx"
+REPORT_DIR="${REPORT_DIR:-$REPORT_DIR_DEFAULT}"
+
+# Subdirectorio por host: permite centralizar auditorías de varios servidores
+# en un mismo directorio si se sincroniza (rsync, NFS, etc.).
+# Se sanitiza el nombre por si hostname devuelve cadenas vacías o con
+# caracteres raros (contenedores mal configurados).
+HOSTNAME_SHORT=$(hostname -s 2>/dev/null | tr -cd 'a-zA-Z0-9-_.')
+[[ -z "$HOSTNAME_SHORT" ]] && HOSTNAME_SHORT="unknown"
+
+if [[ "${LYNX_FLAT:-0}" == "1" ]]; then
+    REPORT_DIR="${REPORT_DIR}"
+else
+    REPORT_DIR="${REPORT_DIR}/${HOSTNAME_SHORT}"
+fi
+
+REPORT_FILE="${REPORT_DIR}/lynx_reporte_${TIMESTAMP}.txt"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -55,6 +75,41 @@ FALLOS=()
 # Utilidades generales
 # ------------------------------------------------------------------------------
 have() { command -v "$1" >/dev/null 2>&1; }
+
+# ------------------------------------------------------------------------------
+# Inicializa el directorio de reportes de forma idempotente:
+#   - Lo crea la primera vez.
+#   - Si ya existe, NO lo borra ni lo sobrescribe: solo verifica permisos.
+#   - Seguro de ejecutar en cada auditoría recurrente.
+# ------------------------------------------------------------------------------
+init_report_dir() {
+    # Si ya existe, no hacemos nada destructivo: solo verificamos permisos.
+    if [[ -d "$REPORT_DIR" ]]; then
+        local mode owner
+        mode=$(stat -c %a "$REPORT_DIR" 2>/dev/null)
+        owner=$(stat -c %U "$REPORT_DIR" 2>/dev/null)
+        if [[ "$mode" != "750" && "$mode" != "700" && "$mode" != "755" ]]; then
+            echo "[i] Aviso: $REPORT_DIR tiene permisos $mode (recomendado 750)." >&2
+        fi
+        if [[ "$owner" != "root" ]]; then
+            echo "[i] Aviso: $REPORT_DIR pertenece a '$owner' (recomendado root)." >&2
+        fi
+        return 0
+    fi
+
+    # Primera ejecución: crear la estructura completa.
+    if ! mkdir -p "$REPORT_DIR" 2>/dev/null; then
+        echo "[!] No se puede crear $REPORT_DIR. Use REPORT_DIR=/otra/ruta" >&2
+        exit 1
+    fi
+
+    # root:adm 750 es el estándar para /var/lib con datos sensibles:
+    # root escribe, el grupo adm puede leer sin necesitar sudo.
+    chown root:adm "$REPORT_DIR" 2>/dev/null || chown root:root "$REPORT_DIR" 2>/dev/null
+    chmod 750 "$REPORT_DIR"
+
+    echo "[i] Directorio de reportes creado: $REPORT_DIR"
+}
 
 # Salida dual: consola con color / archivo sin secuencias ANSI
 log() {
@@ -380,8 +435,14 @@ info_fw_persistencia() {
 EVID_DIR=""
 init_evidence() {
     [[ "${SIN_EVIDENCIAS:-0}" == "1" ]] && return 0
-    EVID_DIR="${REPORT_DIR:-.}/lynx_evidencias_${TIMESTAMP}"
-    if ! mkdir -p "$EVID_DIR" 2>/dev/null; then EVID_DIR=""; return 1; fi
+    EVID_DIR="${REPORT_DIR}/lynx_evidencias_${TIMESTAMP}"
+    # El timestamp incluye segundos, así que colisiones solo si se ejecuta
+    # dos veces en el mismo segundo. En ese caso, mkdir falla y se avisa.
+    if ! mkdir "$EVID_DIR" 2>/dev/null; then
+        echo "[!] Ya existe $EVID_DIR (¿dos ejecuciones en el mismo segundo?)." >&2
+        EVID_DIR=""
+        return 1
+    fi
     chmod 700 "$EVID_DIR"
 }
 # evid <nombre> <comando...> : guarda la salida del comando (o una nota si no existe)
@@ -636,7 +697,8 @@ Lynx v${LYNX_VERSION} - auditor pasivo de seguridad y red (Debian / Ubuntu)
 Uso:  sudo ./lynx.sh [--help | --version]
 
 Variables de entorno:
-  REPORT_DIR=/ruta   directorio donde se guardan reporte y evidencias (defecto: actual)
+  REPORT_DIR=/ruta   directorio base (defecto: /var/lib/lynx/<host>)
+  LYNX_FLAT=1        no añade subdirectorio por host (guarda todo en REPORT_DIR)
   ES_ROUTER=1        el host enruta a proposito: ip_forward=1 se marca N/A
   SIN_EVIDENCIAS=1   no guarda volcados crudos (solo el reporte)
   SKIP_SLOW=1        omite inventarios con find (SUID, world-writable, huerfanos)
@@ -654,6 +716,8 @@ if [[ $EUID -ne 0 ]]; then
     echo -e "${RED}[!] Debe ejecutarse como root para auditar kernel, firewall, usuarios y sombras.${NC}" >&2
     exit 1
 fi
+
+init_report_dir
 
 : > "$REPORT_FILE" || { echo "No se puede escribir en $REPORT_FILE" >&2; exit 1; }
 
