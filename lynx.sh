@@ -340,8 +340,17 @@ chk_conntrack() {
     [[ -d /sys/module/nf_conntrack || -d /sys/module/ip_conntrack ]] \
         || [[ -e /proc/sys/net/netfilter/nf_conntrack_max ]]
 }
+# Bridges "propios": excluye los que crean Docker, libvirt, LXC/LXD, CNI y Podman
+bridges_propios() {
+    local d b
+    for d in /sys/class/net/*/bridge; do
+        [[ -e "$d" ]] || continue
+        b=${d#/sys/class/net/}; b=${b%/bridge}
+        [[ "$b" =~ ^(docker0|br-[0-9a-f]{12}|virbr[0-9]+|lxcbr[0-9]+|lxdbr[0-9]+|cni[0-9]*|podman[0-9]*)$ ]] || echo "$b"
+    done
+}
 chk_bridge_nf() {
-    compgen -G '/sys/class/net/*/bridge' >/dev/null || return 77
+    [[ -z "$(bridges_propios)" ]] && return 77
     sv_eq net.bridge.bridge-nf-call-iptables 1
 }
 
@@ -842,7 +851,7 @@ check_item "Módulo conntrack (stateful) cargado en el kernel" 4 \
     chk_conntrack
 check_item "IP Forwarding desactivado (host puro; use ES_ROUTER=1 si enruta)" 3 \
     chk_ip_forward
-check_item "Si hay bridges: bridge-nf-call-iptables=1 (el tráfico bridged pasa por el firewall)" 3 \
+check_item "Si hay bridges propios (no Docker/libvirt): bridge-nf-call-iptables=1" 3 \
     chk_bridge_nf
 info_red
 
@@ -851,7 +860,7 @@ info_red
 # ------------------------------------------------------------------------------
 log "\n${YELLOW}---> 3. AUDITANDO FIREWALL (IPTABLES LEGACY, IPTABLES-NFT, NFTABLES)${NC}"
 
-check_item "Reglas de firewall cargadas en el kernel (cualquier backend)" 5 \
+check_item "Reglas de firewall que filtran el tráfico entrante (INPUT)" 5 \
     chk_fw_rules_loaded
 check_item "Regla stateful ESTABLISHED,RELATED (conntrack, state o nft ct state)" 7 \
     chk_fw_stateful
@@ -859,7 +868,7 @@ check_item "INPUT con política DROP/REJECT o regla final de denegación" 7 \
     chk_fw_input_deny
 check_item "FORWARD con política DROP/REJECT (o forwarding desactivado)" 3 \
     chk_fw_forward_deny
-check_item "IPv6 filtrado por firewall (o IPv6 deshabilitado)" 3 \
+check_item "IPv6: entrada filtrada por firewall (o IPv6 deshabilitado)" 3 \
     chk_fw_ipv6
 info_firewall
 info_fw_persistencia
