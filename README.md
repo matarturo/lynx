@@ -389,31 +389,31 @@ cd lynx_evidencias_<fecha> && sha256sum -c SHA256SUMS
 
 ## 🔵 Comparación honesta con otras herramientas
 
-Esto **te posiciona mejor**, no peor. Alguien de r/netsec te lo va a preguntar:
+---
 
-```markdown
 ## Lynx frente a otras herramientas
-
+```markdown
 | Herramienta | Enfoque | Cuándo usarla |
 |---|---|---|
 | **Lynx** | 29 controles, evidencias con hash, firewalls legacy + fwbuilder | Revisión rápida, pre-auditoría, migraciones de firewall |
 | Lynis | Auditoría general más amplia, sin foco en firewalls legacy | Primera pasada de hardening |
 | OpenSCAP / CIS-CAT | Cumplimiento formal CIS/STIG | Certificación, reporting regulatorio |
 | auditd + osquery | Monitorización continua | Producción, forense |
-
+```
 Lynx **complementa** estas herramientas; no las sustituye.
 
 ---
 
 ## Códigos de salida
 
+```markdown
 | Código | Significado |
 |---|---|
 | `0` | Auditoría completada, puntaje ≥ 85 % |
 | `1` | Auditoría completada, puntaje entre 60 % y 84 % |
 | `2` | Auditoría completada, puntaje < 60 % |
 | `3` | Error de ejecución (permisos, dependencias, etc.) |
-
+```
 ---
 
 ## Limitaciones
