@@ -34,7 +34,7 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 
 ---
 
-# ¿Por qué Lynx?
+## ¿Por qué Lynx?
 
 - **Pasivo por diseño:** no modifica configuración, no instala paquetes, no reinicia servicios. Ejecutable en producción sin miedo.
 - **Evidencias verificables:** cada auditoría genera un reporte con SHA-256 y volcados crudos, listo para adjuntar a un informe.
@@ -42,7 +42,7 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 
 ---
 
-# Datos básicos
+## Datos básicos
 
 | | |
 |---|---|
@@ -63,7 +63,7 @@ Lynx es un **script de Bash** que revisa, en modo solo lectura, la configuració
 
 ---
 
-# Qué revisa
+## Qué revisa
 
 ### Secciones que puntúan (100 puntos, 29 controles)
 
@@ -90,7 +90,7 @@ Lynx lee las reglas desde **los tres backends** (`iptables-legacy-save`, `iptabl
 
 ---
 
-# Descarga
+## Descarga
 
 **Con git:**
 
@@ -111,7 +111,7 @@ Como el script se ejecuta con privilegios de root, **revisa su contenido antes d
 
 ---
 
-# Instalación
+## Instalación
 
 Lynx no tiene dependencias que instalar: usa herramientas presentes en Debian/Ubuntu (`bash`, `awk`, `grep`, `sed`, `find`, `stat`). Las herramientas opcionales (`ss`/`ip`, `iptables`, `nft`, `sshd`, `dpkg`, `apt-get`) se usan si existen; si falta alguna, el control correspondiente se marca como fallo o se omite.
 
@@ -141,7 +141,7 @@ sudo rm /usr/local/sbin/lynx-audit
 
 ---
 
-# Uso de Lynx
+## Uso
 
 ```bash
 sudo ./lynx.sh                # auditoría completa
@@ -149,7 +149,7 @@ sudo ./lynx.sh                # auditoría completa
 ./lynx.sh --version           # versión
 ```
 
-# Variables de entorno
+## Variables de entorno
 
 | Variable | Efecto |
 |---|---|
@@ -305,7 +305,7 @@ Manifiesto de evidencias: ./lynx_evidencias_20260930_143207/SHA256SUMS
 SHA-256 del reporte: 7c1a3e9f8b04d2e5a6f18c93b7e2d40a9f5c8b1e6d3a7f2c4e9b6a8d1f3c5e70  (archivo: ./lynx_reporte_20260930_143207.txt.sha256)
 ```
 
-# Cómo interpretar este ejemplo
+## Cómo interpretar este ejemplo
 
 - **Sección 1 (24/30):** casi todo bien. Los dos fallos (`dmesg_restrict`, `ptrace_scope`) son hallazgos habituales en Debian 12 recién instalado: se activan añadiendo dos líneas a `/etc/sysctl.d/`.
 - **Sección 2 (10/10):** el control de bridges se marca **N/A** porque el host no tiene bridges; **suma puntos** al no aplicar.
@@ -322,24 +322,23 @@ El ejemplo ilustra dos cosas importantes de Lynx:
 
 ---
 
-# Auditoría estándar, guardando los resultados en un directorio propio
+## Auditoría estándar, guardando los resultados en un directorio propio
 
 ```bash
 sudo mkdir -p /var/lib/lynx && sudo REPORT_DIR=/var/lib/lynx ./lynx.sh
 ```
-# Revisión rápida (sin inventarios lentos ni evidencias crudas)
+### Revisión rápida (sin inventarios lentos ni evidencias crudas)
 ```bash
 sudo SKIP_SLOW=1 SIN_EVIDENCIAS=1 ./lynx.sh
 ```
-# Servidor que actúa como router/firewall de red
+### Servidor que actúa como router/firewall de red
 
 ```bash
 sudo ES_ROUTER=1 ./lynx.sh
 ```
-
 ---
 
-# Salida y cómo interpretarla
+## Salida y cómo interpretarla
 
 Cada ejecución genera, en `REPORT_DIR`:
 
@@ -373,7 +372,7 @@ cd lynx_evidencias_<fecha> && sha256sum -c SHA256SUMS
 
 ---
 
-# ¿Quién puede usarlo? (público objetivo)
+## ¿Quién puede usarlo?
 
 - **Administradores de sistemas y equipos de infraestructura** que necesitan una revisión rápida y repetible de servidores Debian/Ubuntu.
 - **Auditores internos y consultores de seguridad** que requieren evidencia con hash de la configuración de red, firewall, cuentas y permisos.
@@ -388,7 +387,7 @@ cd lynx_evidencias_<fecha> && sha256sum -c SHA256SUMS
 ---
 
 
-# 🔵 Comparación honesta con otras herramientas
+## 🔵 Comparación honesta con otras herramientas
 
 Esto **te posiciona mejor**, no peor. Alguien de r/netsec te lo va a preguntar:
 
@@ -465,7 +464,7 @@ Mantén el carácter **pasivo** del script: los controles nuevos deben ser de so
 
 ---
 
-# 📜 Licencia
+## 📜 Licencia
 
 LYNX se distribuye bajo la **Apache License 2.0**.
 
