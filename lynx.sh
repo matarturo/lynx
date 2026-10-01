@@ -83,7 +83,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 #   - Seguro de ejecutar en cada auditoría recurrente.
 # ------------------------------------------------------------------------------
 init_report_dir() {
-    # Si ya existe, no hacemos nada destructivo: solo verificamos permisos.
+    # Si ya existe, no hace nada destructivo: solo verifica permisos.
     if [[ -d "$REPORT_DIR" ]]; then
         local mode owner
         mode=$(stat -c %a "$REPORT_DIR" 2>/dev/null)
@@ -474,7 +474,7 @@ detect_fwbuilder() {
 
 # ------------------------------------------------------------------------------
 # PERSISTENCIA DEL FIREWALL: ¿las reglas cargadas ahora sobreviven a un reinicio?
-# Informativo (no puntua): busca servicios habilitados, archivos de reglas
+# Informativo: busca servicios habilitados, archivos de reglas
 # persistentes, scripts de arranque y unidades systemd propias.
 # ------------------------------------------------------------------------------
 info_fw_persistencia() {
