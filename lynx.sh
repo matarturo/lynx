@@ -862,7 +862,7 @@ log "\n${YELLOW}---> 3. AUDITANDO FIREWALL (IPTABLES LEGACY, IPTABLES-NFT, NFTAB
 
 check_item "Reglas de firewall que filtran el tráfico entrante (INPUT)" 5 \
     chk_fw_rules_loaded
-check_item "Regla stateful ESTABLISHED,RELATED (conntrack, state o nft ct state)" 7 \
+check_item "Regla stateful ESTABLISHED,RELATED en INPUT (conntrack, state o nft ct state)" 7 \
     chk_fw_stateful
 check_item "INPUT con política DROP/REJECT o regla final de denegación" 7 \
     chk_fw_input_deny
